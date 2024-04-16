@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
@@ -69,6 +69,11 @@
     <button onclick="toggleTransformation('mirror')">Шифр Цезаря</button>
     <button onclick="toggleTransformation('morse')">Азбука Морзе</button>
     <div id="transformedText"></div>
+    
+    <form action="Fileloader.php" method="post" enctype="multipart/form-data">
+        <input type="file" name="file">
+        <button type="submit" name="submit">Upload</button>
+    </form>
     <script>
         let transformationType = '';
 
