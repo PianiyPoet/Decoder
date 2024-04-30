@@ -1,7 +1,11 @@
-from flask import Flask, request
-from  cipher_reader import code_symbol, decode_symbol, custom_dict
+from flask import Flask, request, redirect
+from cipher_reader import code_symbol, decode_symbol, custom_dict, addUser, getUser, getUserByEmail
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask_login import LoginManager, login_user, login_required
+from UserLogin import UserLogin
 
 
+SECRET_KEY = "dffgsdfsdgsdgdfqw"
 def decode(phrase, dict_id):
     code_phrase = ""
     for letter in phrase:
@@ -17,18 +21,24 @@ def code(phrase, dict_id):
 
 
 app = Flask(__name__)
+app.config.from_object(__name__)
 
+login_manager = LoginManager(app)
+@login_manager.user_loader
+def load_user(user_id):
+    print("load_user")
+    return UserLogin().fromDB(user_id)
 
 @app.route('/')
 def site_home():
-    with open("Page_home.html", "r", encoding="utf-8") as html_stream:
+    with open("../../../SiteDec/Page_home.html", "r", encoding="utf-8") as html_stream:
         html = html_stream.read()
         return html
 
 
 @app.route('/code', methods = ["POST", "GET"])
 def site_code():
-    with open("Page_code.html", "r", encoding="utf-8") as html_stream:
+    with open("../../../SiteDec/Page_code.html", "r", encoding="utf-8") as html_stream:
         html = html_stream.read()
         if request.method == "POST":
                 dict = request.form["dict"]
@@ -43,7 +53,7 @@ def site_code():
 
 @app.route('/decode', methods = ["POST","GET"])
 def site_decode():
-    with open("Page_decode.html", "r", encoding="utf-8") as html_stream:
+    with open("../../../SiteDec/Page_decode.html", "r", encoding="utf-8") as html_stream:
         html = html_stream.read()
         if request.method == "POST":
             dict = request.form["dict"]
@@ -57,8 +67,9 @@ def site_decode():
 
 
 @app.route('/makedict', methods = ["POST","GET"])
+@login_required
 def site_makedict():
-    with open("Page_MakeDict.html", "r", encoding="utf-8") as html_stream:
+    with open("../../../SiteDec/Page_MakeDict.html", "r", encoding="utf-8") as html_stream:
         html = html_stream.read()
         if request.method == "POST":
             name = request.form["name"]
@@ -128,13 +139,40 @@ def site_makedict():
             }
             success = custom_dict(name, codes) # 0 - все сработало правильно, 1 - ошибка
         return html
-            
 
+
+@app.route('/register', methods = ["POST", "GET"])
+def register():
+    with open("Page_register.html", "r", encoding="utf-8") as html_stream:
+        html = html_stream.read()
+        if request.method == "POST":
+            if request.form["psw"] == request.form["psw2"]:
+                #hash = generate_password_hash(request.form["psw"])
+                hash = request.form["psw"]
+                print(request.form["name"], request.form["email"], hash)
+                res = addUser(request.form["name"], request.form["email"], hash)
+                if res:
+                    return redirect("/")
+        return html
+
+
+@app.route('/login', methods = ["POST", "GET"])
+def login():
+    with open("Page_login.html", "r", encoding="utf-8") as html_stream:
+        html = html_stream.read()
+        if request.method == 'POST':
+            user = getUserByEmail(request.form["email"])
+            print(user)
+            if user and user[0][3] == request.form["psw"]:
+                userlogin = UserLogin().create(user)
+                login_user(userlogin)
+                return redirect("/")
+        return html
 
 
 @app.route('/help')
 def site_help():
-    with open("Page_help.html", "r", encoding="utf-8") as html_stream:
+    with open("../../../SiteDec/Page_help.html", "r", encoding="utf-8") as html_stream:
         html = html_stream.read()
         return html
 

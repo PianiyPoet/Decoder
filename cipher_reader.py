@@ -52,6 +52,44 @@ def custom_dict(name, symbols):
     db.close()
     return 0
 
+def addUser(name, email,  hpsw):
+    db = sqlite3.connect("ciphers.sqlite")
+    cur = db.cursor()
+    try:
+        cur.execute(f"""INSERT INTO Users VALUES(NULL, "{name}", "{email}", "{hpsw}")""").fetchall()
+        db.commit()
+    except sqlite3.Error as e:
+        print(str(e))
+        return False
+    return True
+
+def getUser(user_id):
+    db = sqlite3.connect("ciphers.sqlite")
+    cur = db.cursor()
+    try:
+        res = cur.execute(f"""SELECT * FROM Users WHERE id = {user_id} LIMIT 1""").fetchall()
+        if not res:
+            print("User not found")
+            return False
+        return res
+    except sqlite3.Error as e:
+        print(str(e))
+    return False
+
+def getUserByEmail(email):
+    db = sqlite3.connect("ciphers.sqlite")
+    cur = db.cursor()
+    try:
+        res = cur.execute(f"""SELECT * FROM Users WHERE email = "{email}" LIMIT 1""").fetchall()
+        if not res:
+            print("User not found")
+            return False
+        return res
+    except sqlite3.Error as e:
+        print(str(e))
+    return False
+
+
 
 if __name__ == "__main__":
     custom_dict("test", {"A": "t", "B": "y"})
